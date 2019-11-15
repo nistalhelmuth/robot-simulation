@@ -4,7 +4,7 @@ import styles from './canvas.module.css';
 
 const Robot = ({
   x,
-  y
+  y,
 }) => (
   <div 
     className={styles.robot}
@@ -36,22 +36,25 @@ class Canvas extends Component {
     super(props);
 
     this.state = {
-      posicion_robot: {
-        x: 0,
-        y: 0,  
+      robot: {
+        posicion: {
+          x:0,
+          y:0,
+        },
+        velocidad: {
+          magnitud:0,
+          direccion:0,
+        },
       },
-      velocidad_robot: {
-        magnitud: 0,
-        direccion: 0
+      pelota: {
+        posicion: {
+          x:0,
+          y:0,
+        },
       },
-      posicion_pelota: {
-        x: 0,
-        y: 0,  
-      },
-      
     }
 
-    //imagen velocidad.png
+    //FUNCIONES 
     //morado
     const velocidad_rapida = (distancia) => 
       distancia < 0.2? 1: (-distancia*5+2)
@@ -77,6 +80,7 @@ class Canvas extends Component {
         angulo < 0.9? 0 : (5*angulo-4)
   }
 
+  //crear posiciones random
   generateNewPositions() {
     const posicion_robot = {
       x: Math.random() * 500,
@@ -88,25 +92,73 @@ class Canvas extends Component {
     };
     this.setState({
       ...this.state,
-      posicion_robot,
-      posicion_pelota,
+      robot: {
+        ...this.state.robot,
+        posicion: posicion_robot
+      },
+      pelota: {
+        ...this.state.pelota,
+        posicion: posicion_pelota,
+      }
     })
   }
 
+  //al iniciar
   componentWillMount() {
     this.generateNewPositions()    
   }
 
+  //actualizar es estado despues de que shouldComponentUpdate regrese true
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    const robot_position = {
+      x: this.state.robot.posicion.x + this.state.robot.velocidad.magnitud * Math.cos(this.state.robot.velocidad.direccion),
+      y: this.state.robot.posicion.y + this.state.robot.velocidad.magnitud * Math.sin(this.state.robot.velocidad.direccion),
+    }
+    this.setState({ 
+      robot: {
+        ...this.state.robot,
+        posicion: robot_position,
+        velocidad: {
+          magnitud: 0,
+          direccion: 0,
+        }
+      },
+    })
+  }
+
+  //revisar si es necesario renderizar los componentes
+  shouldComponentUpdate(nextProps, nextState) {
+    //ERROR: se necesita correr dos veces el proceso para que funcione
+    if (nextState.robot.velocidad.magnitud !== this.state.robot.velocidad.magnitud) {
+      console.log(nextState, this.state)
+      return true
+    }
+    return false
+  }
+
+  // abstracción para mover la pelota
+  moverPelota(magnitud, direccion){
+    this.setState({ 
+      robot:{
+        ...this.state.robot,
+        velocidad: {
+          magnitud,
+          direccion, 
+        }
+      } 
+    })
+  }
+
   render() {
     const {
-      posicion_robot,
-      posicion_pelota,
+      robot,
+      pelota,
     } = this.state
     return (
       <div className={styles.canvas}>
         <div className={styles.playground}>
-          <Robot x={posicion_robot.x} y={posicion_robot.y}/>
-          <Pelota x={posicion_pelota.x} y={posicion_pelota.y}/>
+          <Robot x={robot.posicion.x} y={robot.posicion.y}/>
+          <Pelota x={pelota.posicion.x} y={pelota.posicion.y}/>
         </div>
         <div>
           <button 
@@ -115,9 +167,9 @@ class Canvas extends Component {
             Empezar
           </button>
           <button
-            onClick={ () => console.log("Iniciar logica")}
+            onClick={ () => this.moverPelota(10, 0)}
           >
-            Iniciar
+            Mover
           </button>
         </div>
       </div>
