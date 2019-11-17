@@ -80,28 +80,30 @@ class Canvas extends Component {
         angulo < 0.9? 0 : (5*angulo-4)
   }
 
-  //crear posiciones random
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
+  //crear posiciones random y direccion inicial
   generateNewPositions() {
-    const posicion_robot = {
-      x: Math.random() * 500,
-      y: Math.random() * 500,  
-    };
-    const posicion_pelota = {
-      x: Math.random() * 500,
-      y: Math.random() * 500,  
-    };
-    this.setState({
-      ...this.state,
-      robot: {
-        ...this.state.robot,
-        posicion: posicion_robot,
-        direccion: 0,
-      },
-      pelota: {
-        ...this.state.pelota,
-        posicion: posicion_pelota,
-      }
-    })
+    clearInterval(this.interval);
+    this.setState(prevState => ({
+        ...prevState,
+        robot: {
+          direccion: 0,
+          posicion: {
+            x: Math.random() * 500,
+            y: Math.random() * 500,  
+          }
+        },
+        pelota: {
+          posicion: {
+            x: Math.random() * 500,
+            y: Math.random() * 500,  
+          },
+        },
+      })
+    )
   }
 
   //al iniciar
@@ -110,27 +112,41 @@ class Canvas extends Component {
   }
 
   moverPelota(magnitud){
-    //evaluar su posicion
-    const robot_position = {
-      x: this.state.robot.posicion.x + magnitud * Math.cos(this.state.robot.direccion * Math.PI / 180),
-      y: this.state.robot.posicion.y + magnitud * Math.sin(this.state.robot.direccion * Math.PI / 180),
-    }
-    this.setState({ 
-      robot: {
-        ...this.state.robot,
-        posicion: robot_position,
-      },
-    })
+    this.setState(prevState => {
+        const nuevo_x = prevState.robot.posicion.x + magnitud * Math.cos(prevState.robot.direccion * Math.PI / 180);
+        const nuevo_y = prevState.robot.posicion.y + magnitud * Math.sin(prevState.robot.direccion * Math.PI / 180);
+        //validar que no se salga del canvas
+        return { 
+          robot: {
+            ...prevState.robot,
+            posicion: {
+              x: 0 > nuevo_x? 0 : (nuevo_x < 500? nuevo_x : 500),
+              y: 0 > nuevo_y? 0 : (nuevo_y < 500? nuevo_y : 500),
+            },
+          },
+        }
+      }
+    )
   }
 
   rotarPelota(grados){
-    //evaluar su dirección
-    this.setState({ 
-      robot:{
-        ...this.state.robot,
-        direccion: this.state.robot.direccion + grados,
-      } 
-    })
+    this.setState(prevState => ({ 
+        robot:{
+          ...prevState.robot,
+          direccion: prevState.robot.direccion + grados,
+        } 
+      })
+    )
+  }
+
+  evaluarEstado() {
+    //evaluar el estado y respecto a eso responder
+    this.moverPelota(10);
+    this.rotarPelota(10);
+  }
+
+  empezar() {
+    this.interval = setInterval(() => this.evaluarEstado(), 500);
   }
 
   render() {
@@ -148,17 +164,12 @@ class Canvas extends Component {
           <button 
             onClick={ () => this.generateNewPositions()}
           >
+            Nuevo
+          </button>
+          <button 
+            onClick={ () => this.empezar()}
+          >
             Empezar
-          </button>
-          <button
-            onClick={ () => this.moverPelota(10)}
-          >
-            Mover
-          </button>
-          <button
-            onClick={ () => this.rotarPelota(10)}
-          >
-            Rotar
           </button>
         </div>
       </div>
