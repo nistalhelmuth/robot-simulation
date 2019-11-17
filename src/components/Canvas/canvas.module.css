@@ -21,6 +21,15 @@
   width: 25px;
   position: absolute;
   transition: 1s;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.robotEyes {
+  height: 5px;
+  width: 5px;
+  background: red;
 }
 
 .pelota {
@@ -30,4 +39,5 @@
   width: 25px;
   position: absolute;
   left: 100px;
+  transition: 1s;
 }

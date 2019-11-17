@@ -5,14 +5,17 @@ import styles from './canvas.module.css';
 const Robot = ({
   x,
   y,
+  direccion, //esto esta en grados
 }) => (
   <div 
     className={styles.robot}
     style={{
       left: `${x}px`,
       top: `${y}px`,
+      transform: `rotate(${direccion}deg)`,
     }}
   >
+    <div className={styles.robotEyes}/>
   </div>
 )
 
@@ -41,10 +44,7 @@ class Canvas extends Component {
           x:0,
           y:0,
         },
-        velocidad: {
-          magnitud:0,
-          direccion:0,
-        },
+        direccion:0,
       },
       pelota: {
         posicion: {
@@ -94,7 +94,8 @@ class Canvas extends Component {
       ...this.state,
       robot: {
         ...this.state.robot,
-        posicion: posicion_robot
+        posicion: posicion_robot,
+        direccion: 0,
       },
       pelota: {
         ...this.state.pelota,
@@ -108,43 +109,26 @@ class Canvas extends Component {
     this.generateNewPositions()    
   }
 
-  //actualizar es estado despues de que shouldComponentUpdate regrese true
-  componentDidUpdate(prevProps, prevState, snapshot) {
+  moverPelota(magnitud){
+    //evaluar su posicion
     const robot_position = {
-      x: this.state.robot.posicion.x + this.state.robot.velocidad.magnitud * Math.cos(this.state.robot.velocidad.direccion),
-      y: this.state.robot.posicion.y + this.state.robot.velocidad.magnitud * Math.sin(this.state.robot.velocidad.direccion),
+      x: this.state.robot.posicion.x + magnitud * Math.cos(this.state.robot.direccion * Math.PI / 180),
+      y: this.state.robot.posicion.y + magnitud * Math.sin(this.state.robot.direccion * Math.PI / 180),
     }
     this.setState({ 
       robot: {
         ...this.state.robot,
         posicion: robot_position,
-        velocidad: {
-          magnitud: 0,
-          direccion: 0,
-        }
       },
     })
   }
 
-  //revisar si es necesario renderizar los componentes
-  shouldComponentUpdate(nextProps, nextState) {
-    //ERROR: se necesita correr dos veces el proceso para que funcione
-    if (nextState.robot.velocidad.magnitud !== this.state.robot.velocidad.magnitud) {
-      console.log(nextState, this.state)
-      return true
-    }
-    return false
-  }
-
-  // abstracción para mover la pelota
-  moverPelota(magnitud, direccion){
+  rotarPelota(grados){
+    //evaluar su dirección
     this.setState({ 
       robot:{
         ...this.state.robot,
-        velocidad: {
-          magnitud,
-          direccion, 
-        }
+        direccion: this.state.robot.direccion + grados,
       } 
     })
   }
@@ -157,7 +141,7 @@ class Canvas extends Component {
     return (
       <div className={styles.canvas}>
         <div className={styles.playground}>
-          <Robot x={robot.posicion.x} y={robot.posicion.y}/>
+          <Robot x={robot.posicion.x} y={robot.posicion.y} direccion={robot.direccion}/>
           <Pelota x={pelota.posicion.x} y={pelota.posicion.y}/>
         </div>
         <div>
@@ -167,9 +151,14 @@ class Canvas extends Component {
             Empezar
           </button>
           <button
-            onClick={ () => this.moverPelota(10, 0)}
+            onClick={ () => this.moverPelota(10)}
           >
             Mover
+          </button>
+          <button
+            onClick={ () => this.rotarPelota(10)}
+          >
+            Rotar
           </button>
         </div>
       </div>
