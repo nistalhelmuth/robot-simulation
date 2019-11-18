@@ -21,16 +21,25 @@ const Robot = ({
 
 const Pelota = ({
   x,
-  y
+  y,
+  tiroX,
+  tiroY,
 }) => (
   <div 
     className={styles.pelota}
     style={{
       left: `${x}px`,
       top: `${y}px`,
+      transform: `translate(${tiroX}px, ${tiroY}px)`,
     }}
   >
   </div>
+)
+
+const Porterilla = () => (
+  <div 
+    className={styles.porterilla}
+  />
 )
 
 
@@ -51,33 +60,12 @@ class Canvas extends Component {
           x:0,
           y:0,
         },
+        tiro: {
+          x:0,
+          y:0,
+        }
       },
     }
-
-    //FUNCIONES 
-    //morado
-    const velocidad_rapida = (distancia) => 
-      distancia < 0.2? 1: (-distancia*5+2)
-    //verde
-    const velocidad_media = (distancia) => 
-      distancia < 0.4 ? (distancia*5-1): 0.6 < distancia? (-distancia*5+4): 1
-    //azul
-    const velocidad_lenta = (distancia) => 
-      0.8 < distancia? 1: (-distancia*5+2)
-
-    //360 == 1
-    //rojo
-    const rotacion_iz_rapida = (angulo) => 
-      angulo < 0.2? (-5*angulo+1): 0
-    //verde
-    const rotacion_iz_lenta = (angulo) => 
-      angulo < 0.1? 0 : angulo < 0.3? (5*angulo-0.5): angulo < 0.5? (-5*angulo+2.5):0
-    //morado
-    const rotacion_de_lenta = (angulo) => 
-      angulo < 0.3? 0 : angulo < 0.7? (5*angulo-2.5): angulo < 0.9? (-5*angulo+4.5):0
-    //azul
-    const rotacion_de_rapida = (angulo) => 
-        angulo < 0.9? 0 : (5*angulo-4)
   }
 
   componentWillUnmount() {
@@ -85,7 +73,8 @@ class Canvas extends Component {
   }
 
   //crear posiciones random y direccion inicial
-  generateNewPositions() {
+  generarPosiciones() {
+    console.log('new')
     clearInterval(this.interval);
     this.setState(prevState => ({
         ...prevState,
@@ -97,6 +86,7 @@ class Canvas extends Component {
           }
         },
         pelota: {
+          ...prevState.pelota,
           posicion: {
             x: Math.random() * 500,
             y: Math.random() * 500,  
@@ -108,20 +98,22 @@ class Canvas extends Component {
 
   //al iniciar
   componentWillMount() {
-    this.generateNewPositions()    
+    this.generarPosiciones()    
   }
 
-  moverPelota(magnitud){
+  moverRobot(magnitud){
     this.setState(prevState => {
         const nuevo_x = prevState.robot.posicion.x + magnitud * Math.cos(prevState.robot.direccion * Math.PI / 180);
         const nuevo_y = prevState.robot.posicion.y + magnitud * Math.sin(prevState.robot.direccion * Math.PI / 180);
-        //validar que no se salga del canvas
         return { 
           robot: {
             ...prevState.robot,
             posicion: {
-              x: 0 > nuevo_x? 0 : (nuevo_x < 500? nuevo_x : 500),
-              y: 0 > nuevo_y? 0 : (nuevo_y < 500? nuevo_y : 500),
+              //Creo que la validación no es necesaria con la lógica difusa
+              //x: 0 > nuevo_x? 0 : (nuevo_x < 500? nuevo_x : 500),
+              //y: 0 > nuevo_y? 0 : (nuevo_y < 500? nuevo_y : 500),
+              x: nuevo_x,
+              y: nuevo_y,
             },
           },
         }
@@ -133,20 +125,48 @@ class Canvas extends Component {
     this.setState(prevState => ({ 
         robot:{
           ...prevState.robot,
-          direccion: prevState.robot.direccion + grados,
+          direccion: (prevState.robot.direccion + grados),
         } 
       })
     )
   }
 
   evaluarEstado() {
-    //evaluar el estado y respecto a eso responder
-    this.moverPelota(10);
+    //evaluar el estado
+    const {
+      robot,
+      pelota
+    } = this.state
+    //respuesta
+    //this.moverRobot(10);
     this.rotarPelota(10);
   }
 
   empezar() {
     this.interval = setInterval(() => this.evaluarEstado(), 500);
+  }
+
+  parar() {
+    clearInterval(this.interval);
+  }
+
+  tirar() {
+    this.setState(prevState => {
+      const delta_x = 525 - prevState.pelota.posicion.x ;
+      const delta_y = 240 - prevState.pelota.posicion.y ;
+      const nuevo_x = Math.floor(Math.random() * 50) + delta_x-50;
+      const nuevo_y = Math.floor(Math.random() * 50) + delta_y;
+      return { 
+        pelota: {
+          ...prevState.pelota,
+          tiro: {
+            x: nuevo_x,
+            y: nuevo_y,
+          },
+        },
+      }
+    }
+  )
   }
 
   render() {
@@ -158,11 +178,12 @@ class Canvas extends Component {
       <div className={styles.canvas}>
         <div className={styles.playground}>
           <Robot x={robot.posicion.x} y={robot.posicion.y} direccion={robot.direccion}/>
-          <Pelota x={pelota.posicion.x} y={pelota.posicion.y}/>
+          <Pelota x={pelota.posicion.x} y={pelota.posicion.y} tiroX={pelota.tiro.x} tiroY={pelota.tiro.y}/>
+          <Porterilla/>
         </div>
         <div>
           <button 
-            onClick={ () => this.generateNewPositions()}
+            onClick={ () => this.generarPosiciones()}
           >
             Nuevo
           </button>
@@ -170,6 +191,16 @@ class Canvas extends Component {
             onClick={ () => this.empezar()}
           >
             Empezar
+          </button>
+          <button 
+            onClick={ () => this.parar()}
+          >
+            stop
+          </button>
+          <button 
+            onClick={ () => this.tirar()}
+          >
+            tirar
           </button>
         </div>
       </div>
