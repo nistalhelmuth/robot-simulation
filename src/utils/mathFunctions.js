@@ -11,10 +11,10 @@ export const piecewise3 = (limits, functions, value) => {
 export const piecewise = (limits, functions, value) => {
     for (const [index, lim] of limits.entries()) {
         if (value <= lim) {
-            return functions[index](value)
+            return () => functions[index](value)
         }
     }
 
-    return functions[functions.length - 1](value)
+    return () => functions[functions.length - 1](value)
 
 }
