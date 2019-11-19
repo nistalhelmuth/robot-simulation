@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 
 import styles from './canvas.module.css';
 import { fuzzyLogic } from "../../fuzzy";
-import { robotFuzzyfier, robotDefuzzyfier, robotRules } from "../../fuzzy/fuzzyRobot";
+import { robotFuzzyfier, robotDefuzzyfier, robotRules, goForward, rotateLeft, rotateRight } from "../../fuzzy/fuzzyRobot";
 
 const Robot = ({
   x,
@@ -135,18 +135,23 @@ class Canvas extends Component {
 
   evaluarEstado() {
     //evaluar el estado
-    const {
-      robot,
-      pelota
-    } = this.state
-    //respuesta
-    //this.moverRobot(10);
-    this.rotarPelota(10);
+    const crisp = fuzzyLogic(this.state, robotFuzzyfier, robotDefuzzyfier, robotRules)
+    const impulso = goForward(crisp)()
+    let dir = 0
+    if (crisp > 0) {
+      dir = rotateRight(crisp)()
+    } else {
+      dir = rotateLeft(crisp)()
+    }
+    this.rotarPelota(5 * dir)
+    this.moverRobot(10 * impulso)
+    console.log(impulso)
+    console.log(dir)
   }
 
   empezar() {
-    // this.interval = setInterval(() => this.evaluarEstado(), 500);
-    fuzzyLogic(this.state, robotFuzzyfier, robotDefuzzyfier, robotRules)
+    this.interval = setInterval(() => this.evaluarEstado(), 50);
+    // fuzzyLogic(this.state, robotFuzzyfier, robotDefuzzyfier, robotRules)
   }
 
   parar() {
